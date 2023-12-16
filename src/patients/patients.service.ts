@@ -454,7 +454,7 @@ export class PatientsService {
       where: { id: savedPlan.id },
       relations: ['exercises', 'diets'],
     });
-    return { status: 'Success', data: planData };
+    return { status: 'Success', data: JSON.parse(result) };
     // } catch (error) {
     //   return {
     //     status: 'Failed',
