@@ -1,22 +1,13 @@
 import { Injectable } from '@nestjs/common';
-import OpenAI from 'openai';
+import { OpenAIService } from './openai/openai.service';
 @Injectable()
 export class AppService {
+  constructor(private openAI: OpenAIService) {}
   getHello(): string {
     return 'Hello World!';
   }
 
   async getGpt() {
-    const openai = new OpenAI({
-      apiKey: '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',
-    });
-    const completion = await openai.chat.completions.create({
-      model: 'gpt-4-0613',
-      messages: [{ role: 'user', content: 'Hello!' }],
-      max_tokens: 100,
-      temperature: 0.5,
-    });
-
-    return completion.choices[0].message.content;
+    return this.openAI.chatWithGPT4([{ role: 'user', content: 'Hello!' }]);
   }
 }
