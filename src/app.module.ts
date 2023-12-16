@@ -14,17 +14,17 @@ import { Diet } from './patients/entities/diet.entity';
 @Module({
   imports: [
     ConfigModule.forRoot(),
-    MongooseModule.forRoot(process.env.MONGO_DB_STRING),
     PatientsModule,
     TypeOrmModule.forRoot({
       type: 'postgres',
-      host: 'localhost',
+      host: process.env.HOST,
       port: 5432,
-      username: 'postgres',
-      password: 'postgres',
-      database: 'hackathon',
+      username: process.env.NAME,
+      password: process.env.PASSWORD,
+      database: process.env.DATABASE,
       entities: [Patients, PatientsSuggestions, Plans, Exercise, Diet],
       synchronize: true,
+      ssl: true,
     }),
   ],
   controllers: [AppController],
