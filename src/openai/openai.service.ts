@@ -17,7 +17,7 @@ export class OpenAIService {
         model: 'gpt-4',
         messages: message,
         temperature: 0.4,
-        max_tokens: 1000,
+        max_tokens: 4096,
         top_p: 0.5,
         frequency_penalty: 0,
         presence_penalty: 0,
@@ -25,9 +25,11 @@ export class OpenAIService {
 
       return completion.choices[0].message.content;
     } catch (error) {
-      console.error(error);
-      // Handle or throw the error appropriately
-      throw error;
+      return {
+        status: 'Failed',
+        message: 'Error in AI',
+        code: error.code,
+      };
     }
   }
 }

@@ -6,9 +6,13 @@ import { SuggestDataDTO } from './dto/create-patient.dto';
 export class PatientsController {
   constructor(private readonly patientsService: PatientsService) {}
 
-  @Post('/:id')
-  fetchPatientDetail(@Param('id') patentId: string) {
-    return this.patientsService.fetchPatientDetail(patentId);
+  @Post('suggestions/goal/:id')
+  suggestGoals(@Param('id') patentId: string) {
+    return this.patientsService.suggestGoals(patentId);
+  }
+  @Post('suggestions/plan')
+  suggestPlans(@Body() body: any) {
+    return this.patientsService.suggestPlans(body);
   }
 
   @Post()
