@@ -1,0 +1,136 @@
+{
+    "exercise": [
+        [
+            {
+                "topic": "Morning Walk",
+                "duration": "30 minutes",
+                "intensity": "Low"
+            },
+            {
+                "topic": "Yoga",
+                "duration": "20 minutes",
+                "intensity": "Low to Moderate"
+            }
+        ],
+        [
+            {
+                "topic": "Stretching Exercises",
+                "duration": "20 minutes",
+                "intensity": "Low"
+            },
+            {
+                "topic": "Light Weight Training",
+                "duration": "15 minutes",
+                "intensity": "Moderate"
+            }
+        ],
+        [
+            {
+                "topic": "Pilates",
+                "duration": "30 minutes",
+                "intensity": "Moderate"
+            },
+            {
+                "topic": "Leisure Swimming",
+                "duration": "20 minutes",
+                "intensity": "Low"
+            }
+        ],
+        [
+            {
+                "topic": "Tai Chi",
+                "duration": "30 minutes",
+                "intensity": "Low"
+            },
+            {
+                "topic": "Stationary Bike",
+                "duration": "20 minutes",
+                "intensity": "Moderate"
+            }
+        ],
+        [
+            {
+                "topic": "Brisk Walking",
+                "duration": "30 minutes",
+                "intensity": "Moderate"
+            },
+            {
+                "topic": "Balance Exercises",
+                "duration": "20 minutes",
+                "intensity": "Low"
+            }
+        ]
+    ],
+    "diet": [
+        [
+            {
+                "meal": "Breakfast",
+                "ingredient": "Oatmeal with fruits, 1 cup; Skim milk, 200 ml"
+            },
+            {
+                "meal": "Lunch",
+                "ingredient": "Grilled chicken breast, 150g; Mixed salad, 1 cup; Whole grain bread, 2 slices"
+            },
+            {
+                "meal": "Dinner",
+                "ingredient": "Baked fish, 150g; Steamed vegetables, 1 cup; Brown rice, 100g"
+            }
+        ],
+        [
+            {
+                "meal": "Breakfast",
+                "ingredient": "Greek yogurt with honey, 1 cup; Almonds, 10 pieces"
+            },
+            {
+                "meal": "Lunch",
+                "ingredient": "Turkey sandwich with lettuce, tomato; Quinoa salad, 1 cup"
+            },
+            {
+                "meal": "Dinner",
+                "ingredient": "Stir-fried tofu with mixed vegetables, 1.5 cups; Jasmine rice, 100g"
+            }
+        ],
+        [
+            {
+                "meal": "Breakfast",
+                "ingredient": "Scrambled eggs, 2; Whole grain toast, 2 slices; Fresh orange juice, 200 ml"
+            },
+            {
+                "meal": "Lunch",
+                "ingredient": "Lentil soup, 1 bowl; Spinach salad with cherry tomatoes and feta cheese"
+            },
+            {
+                "meal": "Dinner",
+                "ingredient": "Grilled salmon, 150g; Roasted sweet potatoes, 1 cup; Green beans, 1 cup"
+            }
+        ],
+        [
+            {
+                "meal": "Breakfast",
+                "ingredient": "Smoothie with banana, spinach, and protein powder"
+            },
+            {
+                "meal": "Lunch",
+                "ingredient": "Chicken Caesar salad, 1 large bowl; Whole grain roll, 1"
+            },
+            {
+                "meal": "Dinner",
+                "ingredient": "Beef stir-fry with bell peppers and broccoli, 1.5 cups; Brown rice, 100g"
+            }
+        ],
+        [
+            {
+                "meal": "Breakfast",
+                "ingredient": "Blueberry pancakes, 3; Maple syrup, 2 tablespoons; Skim milk, 200 ml"
+            },
+            {
+                "meal": "Lunch",
+                "ingredient": "Vegetable wrap with hummus; Greek salad, 1 cup"
+            },
+            {
+                "meal": "Dinner",
+                "ingredient": "Shrimp pasta with garlic and olive oil; Mixed greens salad, 1 cup"
+            }
+        ]
+    ]
+}

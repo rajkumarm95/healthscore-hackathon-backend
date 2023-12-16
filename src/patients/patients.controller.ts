@@ -1,5 +1,6 @@
-import { Controller, Post, Param, Get } from '@nestjs/common';
+import { Controller, Post, Param, Body } from '@nestjs/common';
 import { PatientsService } from './patients.service';
+import { SuggestDataDTO } from './dto/create-patient.dto';
 
 @Controller('patients')
 export class PatientsController {
@@ -10,6 +11,8 @@ export class PatientsController {
     return this.patientsService.fetchPatientDetail(patentId);
   }
 
-  @Get()
-  suggest(params: any) {}
+  @Post()
+  suggestTrainingPlan(@Body() suggestData: SuggestDataDTO) {
+    return this.patientsService.suggestTrainingPlan(suggestData);
+  }
 }

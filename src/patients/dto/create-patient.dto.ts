@@ -1,1 +1,4 @@
-export class CreatePatientDto {}
+export class SuggestDataDTO {
+  Duration: string;
+  patientId: string;
+}
