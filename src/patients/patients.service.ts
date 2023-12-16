@@ -6,6 +6,9 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 import { Patients } from './entities/patient.entity';
 import { PatientsSuggestions } from './entities/patient_suggestions.entity';
+import { Plans } from './entities/plans.entity';
+import { Exercise } from './entities/exercise.entity';
+import { Diet } from './entities/diet.entity';
 
 @Injectable()
 export class PatientsService {
@@ -14,6 +17,12 @@ export class PatientsService {
     private patientRepository: Repository<Patients>,
     @InjectRepository(PatientsSuggestions)
     private patientSuggestionsRepository: Repository<PatientsSuggestions>,
+    @InjectRepository(Plans)
+    private plansRepository: Repository<Plans>,
+    @InjectRepository(Exercise)
+    private exerciseRepository: Repository<Exercise>,
+    @InjectRepository(Diet)
+    private dietRepository: Repository<Diet>,
     private readonly httpService: HttpService,
     private openAI: OpenAIService,
   ) {}
@@ -26,6 +35,13 @@ export class PatientsService {
    */
   async suggestGoals(patentId: string) {
     try {
+      const patientSuggestionsExists =
+        await this.patientSuggestionsRepository.find({
+          where: { patients: { patientId: patentId } },
+        });
+      if (patientSuggestionsExists.length) {
+        return patientSuggestionsExists;
+      }
       const apiKey = process.env.API_KEY;
       const baseUrl = process.env.BASE_URL;
       const headers = {
@@ -135,6 +151,8 @@ export class PatientsService {
       const patientSuggestions = await this.patientSuggestionsRepository.find({
         where: { patients: { patientId: patentId } },
       });
+      console.log(message);
+
       return { status: 'Success', data: patientSuggestions };
     } catch (error) {
       return {
@@ -163,8 +181,6 @@ export class PatientsService {
       });
       const patientVitals = patient.vitalData;
       const patientGoals = patientSuggestions.map((goal) => goal.data);
-      console.log('>>>>>>>>>>>>', patientVitals);
-      console.log('>>>>>>>>>>>>', patientGoals);
 
       const expectedOutputFromGPT = [
         {
@@ -204,7 +220,11 @@ export class PatientsService {
         },
         {
           role: 'user',
-          content: `${patientVitals} These are the vitals and details of a person. I want to create a diet plan for him to help him to focus on these ${patientGoals} goals . Seeing above data what do you think how many days plan will be good for him to reach normal stage? the plan must be in days and must consider food and excercises. Give me days in key value pare nothing more nothing less, suggest me multiple plans. The data must be in JSON format.`,
+          content: `${JSON.stringify(
+            patientVitals,
+          )} These are the vitals and details of a person. I want to create a diet plan for him to help him to focus on these ${JSON.stringify(
+            patientGoals,
+          )} goals . Seeing above data what do you think how many days plan will be good for him to reach normal stage? the plan must be in days and must consider food and excercises. Give me days in key value pare nothing more nothing less, suggest me multiple plans. The data must be in JSON format.`,
         },
       ];
       const result = await this.openAI.chatWithGPT4(message);
@@ -225,207 +245,222 @@ export class PatientsService {
    * @returns
    */
   async suggestTrainingPlan(suggestData: SuggestDataDTO) {
-    try {
-      const apiKey = process.env.API_KEY;
-      const baseUrl = process.env.BASE_URL;
-      const patentId = suggestData.patientId;
-      const headers = {
-        Authorization: `Bearer ${apiKey}`,
-      };
-      const patentUrl = `${baseUrl}/getactivevisits`;
+    // try {
+    const { patientId, goalsId, Duration } = suggestData;
 
-      //HealthScore API call
-      const patents = await this.httpService
-        .get(patentUrl, { headers })
-        .toPromise();
-
-      const patientData = patents.data.filteredresults.find(
-        (patient) => patient.patientEId === patentId,
-      );
-
-      const vitalUrl = `${baseUrl}/patientVitals?patientEId=${patentId}`;
-
-      //HealthScore API call
-      const patientVitalsResponse = await this.httpService
-        .get(vitalUrl, {
-          headers,
-        })
-        .toPromise();
-
-      const addedVitals: any = {};
-      const allVitals = [];
-      patientVitalsResponse.data.data.forEach((vitalData) => {
-        allVitals.push(vitalData['name']);
-        if ('value' in vitalData) {
-          addedVitals[vitalData['name']] = vitalData['value'];
-        }
-      });
-
-      const expectedOutputFromGPT = {
-        exercise: [
-          [
-            { topic: 'Morning Walk', duration: '30 minutes', intensity: 'Low' },
-            {
-              topic: 'Yoga',
-              duration: '20 minutes',
-              intensity: 'Low to Moderate',
-            },
-          ],
-          [
-            {
-              topic: 'Stretching Exercises',
-              duration: '20 minutes',
-              intensity: 'Low',
-            },
-            {
-              topic: 'Light Weight Training',
-              duration: '15 minutes',
-              intensity: 'Moderate',
-            },
-          ],
-          [
-            { topic: 'Pilates', duration: '30 minutes', intensity: 'Moderate' },
-            {
-              topic: 'Leisure Swimming',
-              duration: '20 minutes',
-              intensity: 'Low',
-            },
-          ],
-          [
-            { topic: 'Tai Chi', duration: '30 minutes', intensity: 'Low' },
-            {
-              topic: 'Stationary Bike',
-              duration: '20 minutes',
-              intensity: 'Moderate',
-            },
-          ],
-          [
-            {
-              topic: 'Brisk Walking',
-              duration: '30 minutes',
-              intensity: 'Moderate',
-            },
-            {
-              topic: 'Balance Exercises',
-              duration: '20 minutes',
-              intensity: 'Low',
-            },
-          ],
+    const patient = await this.patientRepository.findOne({
+      where: { patientId: patientId },
+    });
+    const patientSuggestions = await this.patientSuggestionsRepository.find({
+      where: { id: In(goalsId) },
+    });
+    const patientVitals = patient.vitalData;
+    const patientGoals = patientSuggestions.map((goal) => goal.data);
+    const expectedOutputFromGPT = {
+      exercise: [
+        [
+          { topic: 'Morning Walk', duration: '30 minutes', intensity: 'Low' },
+          {
+            topic: 'Yoga',
+            duration: '20 minutes',
+            intensity: 'Low to Moderate',
+          },
         ],
-        diet: [
-          [
-            {
-              meal: 'Breakfast',
-              ingredient: 'Oatmeal with fruits, 1 cup; Skim milk, 200 ml',
-            },
-            {
-              meal: 'Lunch',
-              ingredient:
-                'Grilled chicken breast, 150g; Mixed salad, 1 cup; Whole grain bread, 2 slices',
-            },
-            {
-              meal: 'Dinner',
-              ingredient:
-                'Baked fish, 150g; Steamed vegetables, 1 cup; Brown rice, 100g',
-            },
-          ],
-          [
-            {
-              meal: 'Breakfast',
-              ingredient: 'Greek yogurt with honey, 1 cup; Almonds, 10 pieces',
-            },
-            {
-              meal: 'Lunch',
-              ingredient:
-                'Turkey sandwich with lettuce, tomato; Quinoa salad, 1 cup',
-            },
-            {
-              meal: 'Dinner',
-              ingredient:
-                'Stir-fried tofu with mixed vegetables, 1.5 cups; Jasmine rice, 100g',
-            },
-          ],
-          [
-            {
-              meal: 'Breakfast',
-              ingredient:
-                'Scrambled eggs, 2; Whole grain toast, 2 slices; Fresh orange juice, 200 ml',
-            },
-            {
-              meal: 'Lunch',
-              ingredient:
-                'Lentil soup, 1 bowl; Spinach salad with cherry tomatoes and feta cheese',
-            },
-            {
-              meal: 'Dinner',
-              ingredient:
-                'Grilled salmon, 150g; Roasted sweet potatoes, 1 cup; Green beans, 1 cup',
-            },
-          ],
-          [
-            {
-              meal: 'Breakfast',
-              ingredient: 'Smoothie with banana, spinach, and protein powder',
-            },
-            {
-              meal: 'Lunch',
-              ingredient:
-                'Chicken Caesar salad, 1 large bowl; Whole grain roll, 1',
-            },
-            {
-              meal: 'Dinner',
-              ingredient:
-                'Beef stir-fry with bell peppers and broccoli, 1.5 cups; Brown rice, 100g',
-            },
-          ],
-          [
-            {
-              meal: 'Breakfast',
-              ingredient:
-                'Blueberry pancakes, 3; Maple syrup, 2 tablespoons; Skim milk, 200 ml',
-            },
-            {
-              meal: 'Lunch',
-              ingredient: 'Vegetable wrap with hummus; Greek salad, 1 cup',
-            },
-            {
-              meal: 'Dinner',
-              ingredient:
-                'Shrimp pasta with garlic and olive oil; Mixed greens salad, 1 cup',
-            },
-          ],
+        [
+          {
+            topic: 'Stretching Exercises',
+            duration: '20 minutes',
+            intensity: 'Low',
+          },
+          {
+            topic: 'Light Weight Training',
+            duration: '15 minutes',
+            intensity: 'Moderate',
+          },
         ],
-      };
+        [
+          { topic: 'Pilates', duration: '30 minutes', intensity: 'Moderate' },
+          {
+            topic: 'Leisure Swimming',
+            duration: '20 minutes',
+            intensity: 'Low',
+          },
+        ],
+        [
+          { topic: 'Tai Chi', duration: '30 minutes', intensity: 'Low' },
+          {
+            topic: 'Stationary Bike',
+            duration: '20 minutes',
+            intensity: 'Moderate',
+          },
+        ],
+        [
+          {
+            topic: 'Brisk Walking',
+            duration: '30 minutes',
+            intensity: 'Moderate',
+          },
+          {
+            topic: 'Balance Exercises',
+            duration: '20 minutes',
+            intensity: 'Low',
+          },
+        ],
+      ],
+      diet: [
+        [
+          {
+            meal: 'Breakfast',
+            ingredient: 'Oatmeal with fruits, 1 cup; Skim milk, 200 ml',
+          },
+          {
+            meal: 'Lunch',
+            ingredient:
+              'Grilled chicken breast, 150g; Mixed salad, 1 cup; Whole grain bread, 2 slices',
+          },
+          {
+            meal: 'Dinner',
+            ingredient:
+              'Baked fish, 150g; Steamed vegetables, 1 cup; Brown rice, 100g',
+          },
+        ],
+        [
+          {
+            meal: 'Breakfast',
+            ingredient: 'Greek yogurt with honey, 1 cup; Almonds, 10 pieces',
+          },
+          {
+            meal: 'Lunch',
+            ingredient:
+              'Turkey sandwich with lettuce, tomato; Quinoa salad, 1 cup',
+          },
+          {
+            meal: 'Dinner',
+            ingredient:
+              'Stir-fried tofu with mixed vegetables, 1.5 cups; Jasmine rice, 100g',
+          },
+        ],
+        [
+          {
+            meal: 'Breakfast',
+            ingredient:
+              'Scrambled eggs, 2; Whole grain toast, 2 slices; Fresh orange juice, 200 ml',
+          },
+          {
+            meal: 'Lunch',
+            ingredient:
+              'Lentil soup, 1 bowl; Spinach salad with cherry tomatoes and feta cheese',
+          },
+          {
+            meal: 'Dinner',
+            ingredient:
+              'Grilled salmon, 150g; Roasted sweet potatoes, 1 cup; Green beans, 1 cup',
+          },
+        ],
+        [
+          {
+            meal: 'Breakfast',
+            ingredient: 'Smoothie with banana, spinach, and protein powder',
+          },
+          {
+            meal: 'Lunch',
+            ingredient:
+              'Chicken Caesar salad, 1 large bowl; Whole grain roll, 1',
+          },
+          {
+            meal: 'Dinner',
+            ingredient:
+              'Beef stir-fry with bell peppers and broccoli, 1.5 cups; Brown rice, 100g',
+          },
+        ],
+        [
+          {
+            meal: 'Breakfast',
+            ingredient:
+              'Blueberry pancakes, 3; Maple syrup, 2 tablespoons; Skim milk, 200 ml',
+          },
+          {
+            meal: 'Lunch',
+            ingredient: 'Vegetable wrap with hummus; Greek salad, 1 cup',
+          },
+          {
+            meal: 'Dinner',
+            ingredient:
+              'Shrimp pasta with garlic and olive oil; Mixed greens salad, 1 cup',
+          },
+        ],
+      ],
+    };
 
-      const message = [
-        {
-          role: 'system',
-          content:
-            'You are a dietary nutritionist and exercise specialist. the output should be in a stringified JSON format and only include the properties mentioned in the assistance role as this output will be directly fed to API. There must be no text content from your end other then the resulting object.',
-        },
-        {
-          role: 'user',
-          content:
-            'Your task is to develop a daily exercise and dietary plan for a patient over a 5-day period, based on the following vital statistics: Temperature: 102.00°F, Systolic Blood Pressure: 90.00 mmHg, Diastolic Blood Pressure: 80.00 mmHg, Blood Glucose Status: 140.00 mg/dL, SpO2: 98.00%, Age: 34 years, Gender: Male, Height: 5.6 feet, Weight: 58 kg. The output should be formatted in JSON.',
-        },
-        {
-          role: 'assistant',
-          content: `${JSON.stringify(expectedOutputFromGPT)}`,
-        },
-        {
-          role: 'user',
-          content: `Your task is to develop a daily exercise and dietary plan for a patient over a ${suggestData.Duration} period, based on the following vital statistics: Temperature: ${addedVitals.Temperature}°F, Systolic Blood Pressure: ${addedVitals['Systolic blood pressure']} mmHg, Diastolic Blood Pressure: ${addedVitals['Diastolic blood pressure']} mmHg, Blood Glucose Status: ${addedVitals['Blood glucose status']} mg/dL, SpO2: ${addedVitals.SpO2}%, Age: ${patientData.age} years, Gender: ${patientData.gender}, Height: 5.6 feet, Weight: ${patientData.currentWeight} kg. The output should be formatted in JSON.`,
-        },
-      ];
+    const message = [
+      {
+        role: 'system',
+        content:
+          'You are a dietary nutritionist and exercise specialist. the output should be in a stringified JSON format and only include the properties mentioned in the assistance role as this output will be directly fed to API. There must be no text content from your end other then the resulting object.',
+      },
+      {
+        role: 'user',
+        content: `Your task is to develop a daily exercise and dietary plan for a patient whose is focused on [{
+            "topic": "Weight Management",
+            "description": "As the patient's weight is not mentioned, it is important to determine a healthy weight range based on height and age, and work towards achieving and maintaining it."
+        },{
+            "topic": "Regulate Blood Glucose Levels",
+            "description": "Maintain blood glucose within the normal range (70-100 mg/dL fasting, and less than 140 mg/dL post-meal)."
+        }] goals  over a 5-day period, based on the following vital statistics: Temperature: 102.00°F, Systolic Blood Pressure: 90.00 mmHg, Diastolic Blood Pressure: 80.00 mmHg, Blood Glucose Status: 140.00 mg/dL, SpO2: 98.00%, Age: 34 years, Gender: Male, Height: 5.6 feet, Weight: 58 kg. The output should be formatted in JSON.`,
+      },
+      {
+        role: 'assistant',
+        content: `${JSON.stringify(expectedOutputFromGPT)}`,
+      },
+      {
+        role: 'user',
+        content: `Your task is to develop a daily exercise and dietary plan for a patient whose is focused on ${JSON.stringify(
+          patientGoals,
+        )} goals over a ${Duration} days period, based on the following vital statistics: ${JSON.stringify(
+          patientVitals,
+        )} patientVitals The output should be formatted in JSON.`,
+      },
+    ];
 
-      const result = await this.openAI.chatWithGPT4(message);
-      return { status: 'Success', data: JSON.parse(result) };
-    } catch (error) {
-      return {
-        status: 'Failed',
-        message: 'Error in API',
-        code: error.code,
-      };
+    const result = await this.openAI.chatWithGPT4(message);
+    const exercisesData = JSON.parse(result).exercise;
+    const plan = new Plans();
+    plan.patients = { id: patientId } as any; // Assuming you have the patient ID
+
+    const savedPlan = await this.plansRepository.save(plan);
+
+    for (let i = 0; i < exercisesData.length; i++) {
+      for (const exercise of exercisesData[i]) {
+        const newExercise = new Exercise();
+        newExercise.data = JSON.stringify(exercise);
+        newExercise.day = `Day ${i + 1}`;
+        newExercise.plan = savedPlan;
+        await this.exerciseRepository.save(newExercise);
+      }
     }
+    const dietData = JSON.parse(result).diet;
+
+    // Saving diet data
+    for (let i = 0; i < dietData.length; i++) {
+      for (const diet of dietData[i]) {
+        const newDiet = new Diet();
+        newDiet.data = JSON.stringify(diet);
+        newDiet.day = `Day ${i + 1}`;
+        newDiet.plan = savedPlan;
+        await this.dietRepository.save(newDiet);
+      }
+    }
+    const planData = await this.plansRepository.findOne({
+      where: { id: savedPlan.id },
+      relations: ['exercises', 'diets'],
+    });
+    return { status: 'Success', data: planData };
+    // } catch (error) {
+    //   return {
+    //     status: 'Failed',
+    //     message: 'Error in API',
+    //     code: error.code,
+    //   };
+    // }
   }
 }

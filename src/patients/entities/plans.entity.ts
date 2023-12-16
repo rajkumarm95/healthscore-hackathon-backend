@@ -1,5 +1,11 @@
 /* eslint-disable prettier/prettier */
-import { Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  OneToMany,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 import { Patients } from './patient.entity';
 import { Exercise } from './exercise.entity';
 import { Diet } from './diet.entity';
@@ -13,11 +19,9 @@ export class Plans {
   @JoinColumn({ name: 'patient_id' })
   patients: Patients;
 
-  @ManyToOne(() => Exercise, (exercise) => exercise.plan)
-  @JoinColumn({ name: 'exercise_id' })
+  @OneToMany(() => Exercise, (exercise) => exercise.plan)
   exercise: Exercise;
 
-  @ManyToOne(() => Diet, (diet) => diet.plan)
-  @JoinColumn({ name: 'diet_id' })
+  @OneToMany(() => Diet, (diet) => diet.plan)
   diet: Diet;
 }
