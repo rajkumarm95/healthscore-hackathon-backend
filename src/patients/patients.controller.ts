@@ -1,4 +1,4 @@
-import { Controller, Post, Param, Body, Get } from '@nestjs/common';
+import { Controller, Post, Param, Body, Get, Patch } from '@nestjs/common';
 import { PatientsService } from './patients.service';
 import { SuggestDataDTO } from './dto/create-patient.dto';
 
@@ -18,6 +18,16 @@ export class PatientsController {
   @Post()
   suggestTrainingPlan(@Body() suggestData: SuggestDataDTO) {
     return this.patientsService.suggestTrainingPlan(suggestData);
+  }
+
+  @Patch(':id/complete/diet')
+  completeDiet(@Param('id') id: string) {
+    return this.patientsService.completeDiet(id);
+  }
+
+  @Patch(':id/complete/exercise')
+  completeExercise(@Param('id') id: string) {
+    return this.patientsService.completeExercise(id);
   }
 
   @Get()

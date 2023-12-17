@@ -40,7 +40,7 @@ export class PatientsService {
           where: { patients: { patientId: patentId } },
         });
       if (patientSuggestionsExists.length) {
-        return patientSuggestionsExists;
+        return { status: 'Success', data: patientSuggestionsExists };
       }
       const apiKey = process.env.API_KEY;
       const baseUrl = process.env.BASE_URL;
@@ -151,7 +151,6 @@ export class PatientsService {
       const patientSuggestions = await this.patientSuggestionsRepository.find({
         where: { patients: { patientId: patentId } },
       });
-      console.log(message);
 
       return { status: 'Success', data: patientSuggestions };
     } catch (error) {
@@ -245,225 +244,223 @@ export class PatientsService {
    * @returns
    */
   async suggestTrainingPlan(suggestData: SuggestDataDTO) {
-    // try {
-    const { patientId, goalsId, Duration } = suggestData;
+    try {
+      const { patientId, goalsId } = suggestData;
 
-    const patient = await this.patientRepository.findOne({
-      where: { patientId: patientId },
-    });
-    const patientSuggestions = await this.patientSuggestionsRepository.find({
-      where: { id: In(goalsId) },
-    });
-    const patientVitals = patient.vitalData;
-    const patientGoals = patientSuggestions.map((goal) => goal.data);
-    const expectedOutputFromGPT = {
-      exercise: [
-        [
-          { topic: 'Morning Walk', duration: '30 minutes', intensity: 'Low' },
-          {
-            topic: 'Yoga',
-            duration: '20 minutes',
-            intensity: 'Low to Moderate',
-          },
+      // const planExists = this.plansRepository.findOne({
+      //   where: { patients: { patientId: patientId } },
+      //   relations: { diet: true, exercise: true },
+      // });
+      // if (planExists) {
+      //   return { status: 'Success', data: planExists };
+      // }
+      const patient = await this.patientRepository.findOne({
+        where: { patientId: patientId },
+      });
+      const patientSuggestions = await this.patientSuggestionsRepository.find({
+        where: { id: In(goalsId) },
+      });
+      const patientVitals = patient.vitalData;
+      const patientGoals = patientSuggestions.map((goal) => goal.data);
+      const expectedOutputFromGPT = {
+        exercise: [
+          [
+            { topic: 'Morning Walk', duration: '30 minutes', intensity: 'Low' },
+            {
+              topic: 'Yoga',
+              duration: '20 minutes',
+              intensity: 'Low to Moderate',
+            },
+          ],
+          [
+            {
+              topic: 'Stretching Exercises',
+              duration: '20 minutes',
+              intensity: 'Low',
+            },
+            {
+              topic: 'Light Weight Training',
+              duration: '15 minutes',
+              intensity: 'Moderate',
+            },
+          ],
+          [
+            { topic: 'Pilates', duration: '30 minutes', intensity: 'Moderate' },
+            {
+              topic: 'Leisure Swimming',
+              duration: '20 minutes',
+              intensity: 'Low',
+            },
+          ],
+          [
+            { topic: 'Tai Chi', duration: '30 minutes', intensity: 'Low' },
+            {
+              topic: 'Stationary Bike',
+              duration: '20 minutes',
+              intensity: 'Moderate',
+            },
+          ],
+          [
+            {
+              topic: 'Brisk Walking',
+              duration: '30 minutes',
+              intensity: 'Moderate',
+            },
+            {
+              topic: 'Balance Exercises',
+              duration: '20 minutes',
+              intensity: 'Low',
+            },
+          ],
         ],
-        [
-          {
-            topic: 'Stretching Exercises',
-            duration: '20 minutes',
-            intensity: 'Low',
-          },
-          {
-            topic: 'Light Weight Training',
-            duration: '15 minutes',
-            intensity: 'Moderate',
-          },
+        diet: [
+          // Existing Western meals...
+          // Adding Indian meals
+          [
+            {
+              meal: 'Breakfast',
+              ingredient:
+                'Poha (flattened rice with vegetables and peanuts), 1 cup; Green tea, 1 cup',
+              reason:
+                'Light and easy to digest, rich in iron and antioxidants.',
+            },
+            {
+              meal: 'Lunch',
+              ingredient:
+                'Chapati (whole wheat flatbread), 2; Dal (lentil soup), 1 bowl; Mixed vegetable curry, 1 cup',
+              reason:
+                'High in protein from dal, fiber from vegetables, and whole grains from chapati.',
+            },
+            {
+              meal: 'Dinner',
+              ingredient:
+                'Grilled Tandoori chicken, 150g; Brown rice, 100g; Cucumber Raita (yogurt with cucumber), 1 cup',
+              reason:
+                'Lean protein from chicken, whole grains, and probiotics from yogurt.',
+            },
+          ],
+          [
+            {
+              meal: 'Breakfast',
+              ingredient:
+                'Idli (steamed rice cake), 3; Sambar (lentil and vegetable stew), 1 cup; Coconut chutney, 2 tablespoons',
+              reason:
+                'Low in fat, high in protein from sambar, and beneficial fats from coconut.',
+            },
+            {
+              meal: 'Lunch',
+              ingredient:
+                'Vegetable Biryani (mixed vegetable rice), 1 cup; Boondi Raita (yogurt with fried chickpea flour balls), 1 cup',
+              reason:
+                'Balanced meal with carbohydrates, vegetables, and probiotics.',
+            },
+            {
+              meal: 'Dinner',
+              ingredient:
+                'Paneer Tikka (grilled paneer cheese), 150g; Mixed salad, 1 cup; Roti (whole wheat flatbread), 2',
+              reason:
+                'High in protein from paneer, fiber from salad, and whole grains from roti.',
+            },
+          ],
+          [
+            {
+              meal: 'Breakfast',
+              ingredient:
+                'Masala Omelette (omelette with onions, tomatoes, and spices), 2 eggs; Brown bread, 2 slices',
+              reason:
+                'Protein-rich eggs with antioxidants from spices, whole grain bread for fiber.',
+            },
+            {
+              meal: 'Lunch',
+              ingredient:
+                'Rajma (red kidney bean curry), 1 cup; Basmati rice, 1 cup; Green salad, 1 cup',
+              reason:
+                'High in protein and fiber from rajma, complex carbs from rice.',
+            },
+            {
+              meal: 'Dinner',
+              ingredient:
+                'Fish curry, 150g; Steamed rice, 1 cup; Okra stir-fry, 1 cup',
+              reason:
+                'Omega-3 fatty acids from fish, fiber-rich okra, and a light carbohydrate source.',
+            },
+          ],
+          // Continue with similar patterns for additional meals
         ],
-        [
-          { topic: 'Pilates', duration: '30 minutes', intensity: 'Moderate' },
-          {
-            topic: 'Leisure Swimming',
-            duration: '20 minutes',
-            intensity: 'Low',
-          },
-        ],
-        [
-          { topic: 'Tai Chi', duration: '30 minutes', intensity: 'Low' },
-          {
-            topic: 'Stationary Bike',
-            duration: '20 minutes',
-            intensity: 'Moderate',
-          },
-        ],
-        [
-          {
-            topic: 'Brisk Walking',
-            duration: '30 minutes',
-            intensity: 'Moderate',
-          },
-          {
-            topic: 'Balance Exercises',
-            duration: '20 minutes',
-            intensity: 'Low',
-          },
-        ],
-      ],
-      diet: [
-        [
-          {
-            meal: 'Breakfast',
-            ingredient: 'Oatmeal with fruits, 1 cup; Skim milk, 200 ml',
-          },
-          {
-            meal: 'Lunch',
-            ingredient:
-              'Grilled chicken breast, 150g; Mixed salad, 1 cup; Whole grain bread, 2 slices',
-          },
-          {
-            meal: 'Dinner',
-            ingredient:
-              'Baked fish, 150g; Steamed vegetables, 1 cup; Brown rice, 100g',
-          },
-        ],
-        [
-          {
-            meal: 'Breakfast',
-            ingredient: 'Greek yogurt with honey, 1 cup; Almonds, 10 pieces',
-          },
-          {
-            meal: 'Lunch',
-            ingredient:
-              'Turkey sandwich with lettuce, tomato; Quinoa salad, 1 cup',
-          },
-          {
-            meal: 'Dinner',
-            ingredient:
-              'Stir-fried tofu with mixed vegetables, 1.5 cups; Jasmine rice, 100g',
-          },
-        ],
-        [
-          {
-            meal: 'Breakfast',
-            ingredient:
-              'Scrambled eggs, 2; Whole grain toast, 2 slices; Fresh orange juice, 200 ml',
-          },
-          {
-            meal: 'Lunch',
-            ingredient:
-              'Lentil soup, 1 bowl; Spinach salad with cherry tomatoes and feta cheese',
-          },
-          {
-            meal: 'Dinner',
-            ingredient:
-              'Grilled salmon, 150g; Roasted sweet potatoes, 1 cup; Green beans, 1 cup',
-          },
-        ],
-        [
-          {
-            meal: 'Breakfast',
-            ingredient: 'Smoothie with banana, spinach, and protein powder',
-          },
-          {
-            meal: 'Lunch',
-            ingredient:
-              'Chicken Caesar salad, 1 large bowl; Whole grain roll, 1',
-          },
-          {
-            meal: 'Dinner',
-            ingredient:
-              'Beef stir-fry with bell peppers and broccoli, 1.5 cups; Brown rice, 100g',
-          },
-        ],
-        [
-          {
-            meal: 'Breakfast',
-            ingredient:
-              'Blueberry pancakes, 3; Maple syrup, 2 tablespoons; Skim milk, 200 ml',
-          },
-          {
-            meal: 'Lunch',
-            ingredient: 'Vegetable wrap with hummus; Greek salad, 1 cup',
-          },
-          {
-            meal: 'Dinner',
-            ingredient:
-              'Shrimp pasta with garlic and olive oil; Mixed greens salad, 1 cup',
-          },
-        ],
-      ],
-    };
+      };
 
-    const message = [
-      {
-        role: 'system',
-        content:
-          'You are a dietary nutritionist and exercise specialist. the output should be in a stringified JSON format and only include the properties mentioned in the assistance role as this output will be directly fed to API. There must be no text content from your end other then the resulting object.',
-      },
-      {
-        role: 'user',
-        content: `Your task is to develop a daily exercise and dietary plan for a patient whose is focused on [{
+      const message = [
+        {
+          role: 'system',
+          content:
+            'You are a dietary nutritionist and exercise specialist. the output should be in a stringified JSON format and only include the properties mentioned in the assistance role as this output will be directly fed to API. There must be no text content from your end other then the resulting object.',
+        },
+        {
+          role: 'user',
+          content: `Your task is to develop a daily exercise and dietary plan for a patient whose is focused on [{
             "topic": "Weight Management",
             "description": "As the patient's weight is not mentioned, it is important to determine a healthy weight range based on height and age, and work towards achieving and maintaining it."
         },{
             "topic": "Regulate Blood Glucose Levels",
             "description": "Maintain blood glucose within the normal range (70-100 mg/dL fasting, and less than 140 mg/dL post-meal)."
         }] goals  over a 5-day period, based on the following vital statistics: Temperature: 102.00°F, Systolic Blood Pressure: 90.00 mmHg, Diastolic Blood Pressure: 80.00 mmHg, Blood Glucose Status: 140.00 mg/dL, SpO2: 98.00%, Age: 34 years, Gender: Male, Height: 5.6 feet, Weight: 58 kg. The output should be formatted in JSON.`,
-      },
-      {
-        role: 'assistant',
-        content: `${JSON.stringify(expectedOutputFromGPT)}`,
-      },
-      {
-        role: 'user',
-        content: `Your task is to develop a daily exercise and dietary plan for a patient whose is focused on ${JSON.stringify(
-          patientGoals,
-        )} goals over a ${Duration} days period, based on the following vital statistics: ${JSON.stringify(
-          patientVitals,
-        )} patientVitals The output should be formatted in JSON.`,
-      },
-    ];
+        },
+        {
+          role: 'assistant',
+          content: `${JSON.stringify(expectedOutputFromGPT)}`,
+        },
+        {
+          role: 'user',
+          content: `Your task is to develop a daily exercise and dietary plan for a patient whose is focused on ${JSON.stringify(
+            patientGoals,
+          )} goals over a 5 days period, based on the following vital statistics: ${JSON.stringify(
+            patientVitals,
+          )} patientVitals The output should be formatted in JSON.`,
+        },
+      ];
 
-    const result = await this.openAI.chatWithGPT4(message);
-    const exercisesData = JSON.parse(result).exercise;
-    const plan = new Plans();
-    plan.patients = { patientId: patientId } as any; // Assuming you have the patient ID
+      const result = await this.openAI.chatWithGPT4(message);
+      // const exercisesData = JSON.parse(result).exercise;
+      // const plan = new Plans();
+      // plan.patients = { patientId: patientId } as any; // Assuming you have the patient ID
 
-    const savedPlan = await this.plansRepository.save(plan);
+      // const savedPlan = await this.plansRepository.save(plan);
 
-    for (let i = 0; i < exercisesData.length; i++) {
-      for (const exercise of exercisesData[i]) {
-        const newExercise = new Exercise();
-        newExercise.data = JSON.stringify(exercise);
-        newExercise.day = `Day ${i + 1}`;
-        newExercise.plan = savedPlan;
-        await this.exerciseRepository.save(newExercise);
-      }
+      // for (let i = 0; i < exercisesData.length; i++) {
+      //   for (const exercise of exercisesData[i]) {
+      //     const newExercise = new Exercise();
+      //     newExercise.data = JSON.stringify(exercise);
+      //     newExercise.day = `Day ${i + 1}`;
+      //     newExercise.plan = savedPlan;
+      //     await this.exerciseRepository.save(newExercise);
+      //   }
+      // }
+      // const dietData = JSON.parse(result).diet;
+
+      // // Saving diet data
+      // for (let i = 0; i < dietData.length; i++) {
+      //   for (const diet of dietData[i]) {
+      //     const newDiet = new Diet();
+      //     newDiet.data = JSON.stringify(diet);
+      //     newDiet.day = `Day ${i + 1}`;
+      //     newDiet.plan = savedPlan;
+      //     await this.dietRepository.save(newDiet);
+      //   }
+      // }
+      // console.log(savedPlan);
+
+      // const planData = await this.plansRepository.findOne({
+      //   where: { id: savedPlan.id },
+      //   relations: { diet: true, exercise: true },
+      // });
+      return { status: 'Success', data: JSON.parse(result) };
+    } catch (error) {
+      return {
+        status: 'Failed',
+        message: 'Error in API',
+        code: error.code,
+      };
     }
-    const dietData = JSON.parse(result).diet;
-
-    // Saving diet data
-    for (let i = 0; i < dietData.length; i++) {
-      for (const diet of dietData[i]) {
-        const newDiet = new Diet();
-        newDiet.data = JSON.stringify(diet);
-        newDiet.day = `Day ${i + 1}`;
-        newDiet.plan = savedPlan;
-        await this.dietRepository.save(newDiet);
-      }
-    }
-    console.log(savedPlan);
-
-    const planData = await this.plansRepository.findOne({
-      where: { id: savedPlan.id },
-      relations: { diet: true, exercise: true },
-    });
-    return { status: 'Success', data: planData };
-    // } catch (error) {
-    //   return {
-    //     status: 'Failed',
-    //     message: 'Error in API',
-    //     code: error.code,
-    //   };
-    // }
   }
 
   async test() {
@@ -472,5 +469,29 @@ export class PatientsService {
       relations: { diet: true, exercise: true },
     });
     return planData;
+  }
+
+  async completeDiet(id: string): Promise<string> {
+    const diet = await this.dietRepository.findOne({ where: { id } });
+    if (!diet) {
+      throw new Error('Diet plan not found');
+    }
+
+    diet.completed = true;
+    await this.dietRepository.save(diet);
+
+    return 'Congratulations on completing your diet plan!';
+  }
+
+  async completeExercise(id: string): Promise<string> {
+    const exercise = await this.exerciseRepository.findOne({ where: { id } });
+    if (!exercise) {
+      throw new Error('Exercise plan not found');
+    }
+
+    exercise.completed = true;
+    await this.exerciseRepository.save(exercise);
+
+    return 'Congratulations on completing your exercise routine!';
   }
 }
