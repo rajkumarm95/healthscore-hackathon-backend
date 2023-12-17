@@ -425,7 +425,7 @@ export class PatientsService {
     const result = await this.openAI.chatWithGPT4(message);
     const exercisesData = JSON.parse(result).exercise;
     const plan = new Plans();
-    plan.patients = { id: patientId } as any; // Assuming you have the patient ID
+    plan.patients = { patientId: patientId } as any; // Assuming you have the patient ID
 
     const savedPlan = await this.plansRepository.save(plan);
 
@@ -450,11 +450,13 @@ export class PatientsService {
         await this.dietRepository.save(newDiet);
       }
     }
+    console.log(savedPlan);
+
     const planData = await this.plansRepository.findOne({
       where: { id: savedPlan.id },
-      relations: ['exercises', 'diets'],
+      relations: { diet: true, exercise: true },
     });
-    return { status: 'Success', data: JSON.parse(result) };
+    return { status: 'Success', data: planData };
     // } catch (error) {
     //   return {
     //     status: 'Failed',
@@ -462,5 +464,13 @@ export class PatientsService {
     //     code: error.code,
     //   };
     // }
+  }
+
+  async test() {
+    const planData = await this.plansRepository.findOne({
+      where: { id: '2f7902f7-8f65-47d6-ab74-1456306c11ca' },
+      relations: { diet: true, exercise: true },
+    });
+    return planData;
   }
 }
